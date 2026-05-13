@@ -2,23 +2,64 @@
 #include <stdlib.h>
 #include <string.h>
 
+// General function
 void clearInputBuffer(void) {
-
+    int c;
+    while ((c = getchar()) != '\n' && c != EOF) {}
 }
 const char *circulationName(int circulation) {
-
+    switch (circulation) {
+        case DAILY: return "Daily";
+        case ODD: return "Odd days";
+        case EVEN: return "Even days";
+        default: return "Unknown";
+    }
 }
 Train inputTrain(void) {
+    Train t;
 
+    printf("Train number: ");
+    scanf("%d", &t.number);
+    clearInputBuffer();
+
+    printf("Destination: ");
+    fgets(t.destination, sizeof(t.destination), stdin);
+    t.destination[strcspn(t.destination, "\n")] = '\0';
+
+    printf("Departure hour and minute: ");
+    scanf("%d %d", &t.dep_hour, &t.dep_min);
+
+    printf("Arrival hour and minute: ");
+    scanf("%d %d", &t.arr_hour, &t.arr_min);
+
+    printf("Circulation: 0-Daily, 1-Odd, 2-Even: ");
+    scanf("%d", &t.circulation);
+
+    return t;
 }
 void printTrain(const Train *t) {
-
+    printf("Train number: %d\n", t->number);
+    printf("Destination: %s\n", t->destination);
+    printf("Departure: %02d:%02d\n", t->dep_hour, t->dep_min);
+    printf("Arrival: %02d:%02d\n", t->arr_hour, t->arr_min);
+    printf("Circulation: %s\n\n", circulationName(t->circulation));
 }
 void printTrainToFile(FILE *file, const Train *t) {
-
+    fprintf(file, "Train number: %d\n", t->number);
+    fprintf(file, "Destination: %s\n", t->destination);
+    fprintf(file, "Departure: %02d:%02d\n", t->dep_hour, t->dep_min);
+    fprintf(file, "Arrival: %02d:%02d\n", t->arr_hour, t->arr_min);
+    fprintf(file, "Circulation: %s\n\n", circulationName(t->circulation));
 }
 Node *createNode(Train train) {
-
+    Node *newNode = (Node *)malloc(sizeof(Node));
+    if (newNode == NULL) {
+        printf("Memory allocation failed.\n");
+        return NULL;
+    }
+    newNode->data = train;
+    newNode->next = NULL;
+    return newNode;
 }
 
 // Stack functions
@@ -188,5 +229,5 @@ void readTextFile(const char *path) {
 
 }
 void deleteFileByPath(const char *path) {
-    
+
 }
