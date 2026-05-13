@@ -123,4 +123,4 @@ void savePriorityBinary(const PriorityQueue *pq, const char *path);
 
 void readTextFile(const char *path);
 void deleteFileByPath(const char *path);
-#endif 
+#endif
