@@ -255,31 +255,108 @@ void clearQueue(Queue *q) {
 
 // Double Ended Queue functions
 void initDeque(Deque *dq) {
-
+    dq->front = NULL;
+    dq->rear = NULL;
+    dq->size = 0;
 }
 void insertFrontDeque(Deque *dq, Train train) {
-
+    Node *newNode = createNode(train);
+    if (!newNode) return;
+    if (dq->front == NULL) {
+        dq->front = dq->rear = newNode;
+    } else {
+        newNode->next = dq->front;
+        dq->front = newNode;
+    }
+    dq->size++;
 }
 void insertRearDeque(Deque *dq, Train train) {
-
+    Node *newNode = createNode(train);
+    if (!newNode) return;
+    if (dq->rear == NULL) {
+        dq->front = dq->rear = newNode;
+    } else {
+        dq->rear->next = newNode;
+        dq->rear = newNode;
+    }
+    dq->size++;
 }
 int deleteFrontDeque(Deque *dq, Train *removed) {
-
+    if (dq->front == NULL) return 0;
+    Node *temp = dq->front;
+    *removed = temp->data;
+    dq->front = dq->front->next;
+    if (dq->front == NULL) dq->rear = NULL;
+    free(temp);
+    dq->size--;
+    return 1;
 }
 int deleteRearDeque(Deque *dq, Train *removed) {
-
+    if (dq->rear == NULL) return 0;
+    Node *current = dq->front;
+    Node *previous = NULL;
+    while (current->next != NULL) {
+        previous = current;
+        current = current->next;
+    }
+    *removed = current->data;
+    if (previous == NULL) {
+        dq->front = dq->rear = NULL;
+    } else {
+        previous->next = NULL;
+        dq->rear = previous;
+    }
+    free(current);
+    dq->size--;
+    return 1;
 }
 void displayDeque(const Deque *dq) {
-
+    Node *current = dq->front;
+    int position = 1;
+    if (!current) {
+        printf("Deque is empty.\n");
+        return;
+    }
+    while (current) {
+        printf("Position %d:\n", position++);
+        printTrain(&current->data);
+        current = current->next;
+    }
 }
 Node *searchDequeByNumber(const Deque *dq, int number) {
-
+    Node *current = dq->front;
+    while (current) {
+        if (current->data.number == number) return current;
+        current = current->next;
+    }
+    return NULL;
 }
 int deleteDequeByPosition(Deque *dq, int position) {
-
+    if (dq->front == NULL || position < 1) return 0;
+    Node *current = dq->front;
+    Node *previous = NULL;
+    int index = 1;
+    while (current && index < position) {
+        previous = current;
+        current = current->next;
+        index++;
+    }
+    if (!current) return 0;
+    if (previous == NULL) {
+        dq->front = current->next;
+    } else {
+        previous->next = current->next;
+    }
+    if (current == dq->rear) {
+        dq->rear = previous;
+    }
+    free(current);
+    dq->size--;
+    return 1;
 }
 void clearDeque(Deque *dq) {
-
+    Train removed;
+    while (deleteFrontDeque(dq, &removed)) {}
 }
 
 // Circular Queue functions
