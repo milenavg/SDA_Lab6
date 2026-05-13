@@ -361,89 +361,276 @@ void clearDeque(Deque *dq) {
 
 // Circular Queue functions
 void initCircularQueue(CircularQueue *cq) {
-
+    cq->front = NULL;
+    cq->rear = NULL;
+    cq->size = 0;
 }
 void enqueueCircular(CircularQueue *cq, Train train) {
-
+    Node *newNode = createNode(train);
+    if (!newNode) return;
+    if (cq->front == NULL) {
+        cq->front = cq->rear = newNode;
+        newNode->next = cq->front;
+    } else {
+        cq->rear->next = newNode;
+        cq->rear = newNode;
+        cq->rear->next = cq->front;
+    }
+    cq->size++;
 }
 int dequeueCircular(CircularQueue *cq, Train *removed) {
-
+    if (cq->front == NULL) return 0;
+    Node *temp = cq->front;
+    *removed = temp->data;
+    if (cq->front == cq->rear) {
+        cq->front = cq->rear = NULL;
+    } else {
+        cq->front = cq->front->next;
+        cq->rear->next = cq->front;
+    }
+    free(temp);
+    cq->size--;
+    return 1;
 }
 void displayCircularQueue(const CircularQueue *cq) {
-
+    if (cq->front == NULL) {
+        printf("Circular Queue is empty.\n");
+        return;
+    }
+    Node *current = cq->front;
+    int position = 1;
+    do {
+        printf("Position %d:\n", position++);
+        printTrain(&current->data);
+        current = current->next;
+    } while (current != cq->front);
 }
 Node *searchCircularByNumber(const CircularQueue *cq, int number) {
-
+    if (cq->front == NULL) return NULL;
+    Node *current = cq->front;
+    do {
+        if (current->data.number == number) return current;
+        current = current->next;
+    } while (current != cq->front);
+    return NULL;
 }
 int deleteCircularByPosition(CircularQueue *cq, int position) {
-
+    if (cq->front == NULL || position < 1 || position > cq->size) return 0;
+    Node *current = cq->front;
+    Node *previous = cq->rear;
+    int index = 1;
+    while (index < position) {
+        previous = current;
+        current = current->next;
+        index++;
+    }
+    if (current == cq->front && current == cq->rear) {
+        cq->front = cq->rear = NULL;
+    } else {
+        previous->next = current->next;
+        if (current == cq->front) {
+            cq->front = current->next;
+            cq->rear->next = cq->front;
+        }
+        if (current == cq->rear) {
+            cq->rear = previous;
+            cq->rear->next = cq->front;
+        }
+    }
+    free(current);
+    cq->size--;
+    return 1;
 }
 void clearCircularQueue(CircularQueue *cq) {
-
+    Train removed;
+    while (dequeueCircular(cq, &removed)) {}
 }
 
 // Priority Queue functions
 void initPriorityQueue(PriorityQueue *pq) {
-
+    pq->front = NULL;
+    pq->size = 0;
+}
+static int trainPriority(Train t) {
+    int depTime = t.dep_hour * 60 + t.dep_min;
+    return t.circulation * 10000 + depTime;
 }
 void enqueuePriority(PriorityQueue *pq, Train train) {
-
+    Node *newNode = createNode(train);
+    if (!newNode) return;
+    if (pq->front == NULL || trainPriority(train) < trainPriority(pq->front->data)) {
+        newNode->next = pq->front;
+        pq->front = newNode;
+    } else {
+        Node *current = pq->front;
+        while (current->next != NULL &&
+               trainPriority(current->next->data) <= trainPriority(train)) {
+            current = current->next;
+        }
+        newNode->next = current->next;
+        current->next = newNode;
+    }
+    pq->size++;
 }
 int dequeuePriority(PriorityQueue *pq, Train *removed) {
-
+    if (pq->front == NULL) return 0;
+    Node *temp = pq->front;
+    *removed = temp->data;
+    pq->front = pq->front->next;
+    free(temp);
+    pq->size--;
+    return 1;
 }
 void displayPriorityQueue(const PriorityQueue *pq) {
-
+    Node *current = pq->front;
+    int position = 1;
+    if (!current) {
+        printf("Priority Queue is empty.\n");
+        return;
+    }
+    while (current) {
+        printf("Priority position %d:\n", position++);
+        printTrain(&current->data);
+        current = current->next;
+    }
 }
 Node *searchPriorityByNumber(const PriorityQueue *pq, int number) {
-
+    Node *current = pq->front;
+    while (current) {
+        if (current->data.number == number) return current;
+        current = current->next;
+    }
+    return NULL;
 }
 int deletePriorityByPosition(PriorityQueue *pq, int position) {
-
+    if (pq->front == NULL || position < 1) return 0;
+    Node *current = pq->front;
+    Node *previous = NULL;
+    int index = 1;
+    while (current && index < position) {
+        previous = current;
+        current = current->next;
+        index++;
+    }
+    if (!current) return 0;
+    if (previous == NULL) {
+        pq->front = current->next;
+    } else {
+        previous->next = current->next;
+    }
+    free(current);
+    pq->size--;
+    return 1;
 }
 void clearPriorityQueue(PriorityQueue *pq) {
-
+    Train removed;
+    while (dequeuePriority(pq, &removed)) {}
 }
 
 // File functions
 void readFilePath(char *path, int size) {
-
+    clearInputBuffer();
+    printf("Enter full file path/name: ");
+    fgets(path, size, stdin);
+    path[strcspn(path, "\n")] = '\0';
+}
+static void saveListTxt(Node *start, const char *path, int circular) {
+    FILE *file = fopen(path, "w");
+    if (!file) {
+        printf("Cannot open file.\n");
+        return;
+    }
+    if (!start) {
+        fprintf(file, "List is empty.\n");
+        fclose(file);
+        return;
+    }
+    Node *current = start;
+    if (!circular) {
+        while (current) {
+            printTrainToFile(file, &current->data);
+            current = current->next;
+        }
+    } else {
+        do {
+            printTrainToFile(file, &current->data);
+            current = current->next;
+        } while (current != start);
+    }
+    fclose(file);
+    printf("Saved successfully in text file.\n");
+}
+static void saveListBinary(Node *start, const char *path, int circular) {
+    FILE *file = fopen(path, "wb");
+    if (!file) {
+        printf("Cannot open binary file.\n");
+        return;
+    }
+    if (!start) {
+        fclose(file);
+        return;
+    }
+    Node *current = start;
+    if (!circular) {
+        while (current) {
+            fwrite(&current->data, sizeof(Train), 1, file);
+            current = current->next;
+        }
+    } else {
+        do {
+            fwrite(&current->data, sizeof(Train), 1, file);
+            current = current->next;
+        } while (current != start);
+    }
+    fclose(file);
+    printf("Saved successfully in binary file.\n");
 }
 void saveStackTxt(const Stack *s, const char *path) {
-
+    saveListTxt(s->top, path, 0);
 }
 void saveQueueTxt(const Queue *q, const char *path) {
-
+    saveListTxt(q->front, path, 0);
 }
 void saveDequeTxt(const Deque *dq, const char *path) {
-
+    saveListTxt(dq->front, path, 0);
 }
 void saveCircularTxt(const CircularQueue *cq, const char *path) {
-
+    saveListTxt(cq->front, path, 1);
 }
 void savePriorityTxt(const PriorityQueue *pq, const char *path) {
-
+    saveListTxt(pq->front, path, 0);
 }
-
 void saveStackBinary(const Stack *s, const char *path) {
-
+    saveListBinary(s->top, path, 0);
 }
 void saveQueueBinary(const Queue *q, const char *path) {
-
+    saveListBinary(q->front, path, 0);
 }
 void saveDequeBinary(const Deque *dq, const char *path) {
-
+    saveListBinary(dq->front, path, 0);
 }
 void saveCircularBinary(const CircularQueue *cq, const char *path) {
-
+    saveListBinary(cq->front, path, 1);
 }
 void savePriorityBinary(const PriorityQueue *pq, const char *path) {
-
+    saveListBinary(pq->front, path, 0);
 }
-
 void readTextFile(const char *path) {
-
+    FILE *file = fopen(path, "r");
+    char line[256];
+    if (!file) {
+        printf("Cannot open file for reading.\n");
+        return;
+    }
+    while (fgets(line, sizeof(line), file)) {
+        printf("%s", line);
+    }
+    fclose(file);
 }
 void deleteFileByPath(const char *path) {
-
+    if (remove(path) == 0) {
+        printf("File deleted successfully.\n");
+    } else {
+        printf("Could not delete file.\n");
+    }
 }
