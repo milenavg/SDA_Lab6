@@ -64,28 +64,93 @@ Node *createNode(Train train) {
 
 // Stack functions
 void initStack(Stack *s) {
-
+    s->top = NULL;
+    s->size = 0;
 }
 void pushStack(Stack *s, Train train) {
+    Node *newNode = createNode(train);
+    if (!newNode) return;
 
+    newNode->next = s->top;
+    s->top = newNode;
+    s->size++;
 }
 int popStack(Stack *s, Train *removed) {
+    if (s->top == NULL) return 0;
 
+    Node *temp = s->top;
+    *removed = temp->data;
+    s->top = s->top->next;
+    free(temp);
+    s->size--;
+
+    return 1;
 }
 void displayStack(const Stack *s) {
+    Node *current = s->top;
+    int position = 1;
 
+    if (!current) {
+        printf("Stack is empty.\n");
+        return;
+    }
+
+    while (current) {
+        printf("Position %d:\n", position++);
+        printTrain(&current->data);
+        current = current->next;
+    }
 }
 Node *searchStackByPosition(const Stack *s, int position) {
+    Node *current = s->top;
+    int index = 1;
 
+    while (current) {
+        if (index == position) return current;
+        current = current->next;
+        index++;
+    }
+
+    return NULL;
 }
 Node *searchStackByNumber(const Stack *s, int number) {
+    Node *current = s->top;
 
+    while (current) {
+        if (current->data.number == number) return current;
+        current = current->next;
+    }
+
+    return NULL;
 }
 int deleteStackByPosition(Stack *s, int position) {
+    if (s->top == NULL || position < 1) return 0;
 
+    Node *current = s->top;
+    Node *previous = NULL;
+    int index = 1;
+
+    while (current && index < position) {
+        previous = current;
+        current = current->next;
+        index++;
+    }
+
+    if (!current) return 0;
+
+    if (previous == NULL) {
+        s->top = current->next;
+    } else {
+        previous->next = current->next;
+    }
+
+    free(current);
+    s->size--;
+    return 1;
 }
 void clearStack(Stack *s) {
-
+    Train removed;
+    while (popStack(s, &removed)) {}
 }
 
 // Simple Queue functions
