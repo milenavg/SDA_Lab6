@@ -155,28 +155,102 @@ void clearStack(Stack *s) {
 
 // Simple Queue functions
 void initQueue(Queue *q) {
-
+    q->front = NULL;
+    q->rear = NULL;
+    q->size = 0;
 }
 void enqueue(Queue *q, Train train) {
+    Node *newNode = createNode(train);
+    if (!newNode) return;
 
+    if (q->rear == NULL) {
+        q->front = q->rear = newNode;
+    } else {
+        q->rear->next = newNode;
+        q->rear = newNode;
+    }
+
+    q->size++;
 }
 int dequeue(Queue *q, Train *removed) {
+    if (q->front == NULL) return 0;
 
+    Node *temp = q->front;
+    *removed = temp->data;
+    q->front = q->front->next;
+
+    if (q->front == NULL) q->rear = NULL;
+
+    free(temp);
+    q->size--;
+    return 1;
 }
 void displayQueue(const Queue *q) {
+    Node *current = q->front;
+    int position = 1;
 
+    if (!current) {
+        printf("Queue is empty.\n");
+        return;
+    }
+
+    while (current) {
+        printf("Position %d:\n", position++);
+        printTrain(&current->data);
+        current = current->next;
+    }
 }
 Node *searchQueueByPosition(const Queue *q, int position) {
+    Node *current = q->front;
+    int index = 1;
+    while (current) {
+        if (index == position) return current;
+        current = current->next;
+        index++;
+    }
 
+    return NULL;
 }
 Node *searchQueueByNumber(const Queue *q, int number) {
-
+    Node *current = q->front;
+    while (current) {
+        if (current->data.number == number) return current;
+        current = current->next;
+    }
+    return NULL;
 }
 int deleteQueueByPosition(Queue *q, int position) {
+    if (q->front == NULL || position < 1) return 0;
 
+    Node *current = q->front;
+    Node *previous = NULL;
+    int index = 1;
+
+    while (current && index < position) {
+        previous = current;
+        current = current->next;
+        index++;
+    }
+
+    if (!current) return 0;
+
+    if (previous == NULL) {
+        q->front = current->next;
+    } else {
+        previous->next = current->next;
+    }
+
+    if (current == q->rear) {
+        q->rear = previous;
+    }
+
+    free(current);
+    q->size--;
+    return 1;
 }
 void clearQueue(Queue *q) {
-
+    Train removed;
+    while (dequeue(q, &removed)) {}
 }
 
 // Double Ended Queue functions
